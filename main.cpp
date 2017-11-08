@@ -18,6 +18,7 @@ bool checkImage(vector<vector <Pixel> >&, vector<vector <Pixel> >&);
 void pixelValue(vector<vector <Pixel> > &, int &, int &, int &);
 //Receive red green and blue averages and places them into a pixel matrix through reference 
 void insertPixel(vector<vector <Pixel> > &, int, int, int);
+const int FIRST_FILE = 1;
 int main()
 {
   int fileAmount = 0;
@@ -29,44 +30,51 @@ int main()
   vector< vector<Pixel> > matrixToCheck;
   cout << "Enter up to 10 valid BMP files. Enter DONE when done.\n";
   do{
-      cin >> fileName;
-      img.open(fileName);
-      if(img.isImage())
+    cin >> fileName;
+    img.open(fileName);
+    fileAmount++;
+    if(img.isImage())
+    {
+      if(fileAmount == FIRST_FILE)
       {
-        if(fileAmount == 0)
-        {
         originalMatrix = img.toPixelMatrix();
-        }else
-        {
-         matrixToCheck = img.toPixelMatrix();   
-        }
-        if(checkImage(matrixToCheck, originalMatrix))
-          {
-            fileList.push_back(fileName);
-            cout << "File succesfully added\n";
-          }
+        cout << "original matrix set\n"; 
+      }else
+      {
+        matrixToCheck = img.toPixelMatrix();   
+        cout << "matrix #" << fileAmount << endl; 
       }
-    }while(fileName != "DONE" || fileName != "done" || fileName != "Done" || fileAmount == 10);
+      if(fileAmount != FIRST_FILE)
+      {
+        if(checkImage(matrixToCheck, originalMatrix))
+        {
+          fileList.push_back(fileName);
+          cout << "File succesfully added\n";
+        }
+
+      } 
+    }     
+  }while(fileName != "DONE" || fileName != "done" || fileName != "Done" || fileAmount == 10);
 }
 
 bool checkImage(vector<vector <Pixel> >& pixelMatrix, vector<vector <Pixel> >& originalMatrix)
 {
- for(int i = 0; i < pixelMatrix.size(); i++)
+  if(pixelMatrix.size() == originalMatrix.size())
   {
-    if(pixelMatrix.size() == originalMatrix.size())
-     {
-      for(int j = 0; j < pixelMatrix[i].size(); i++)
-       {
+    for(int i = 0; i < pixelMatrix.size(); i++) 
+    {
+      for(int j = 0; j < pixelMatrix[i].size(); j++)
+      {
         if(pixelMatrix[i].size() != originalMatrix[i].size())
-          {
-            cout << "Matrices don't match\n";
-            return false;
-          }
-       }
-     }else{
-      cout << "no match\n";
-      return false;
-          }
+        {
+          cout << "Colums don't match\n";
+          return false;
+        }
+      }
+    }
+  }else{
+    cout << "rows no match\n";
+    return false;
   }
   cout << "matrices match\n";
   return true;
