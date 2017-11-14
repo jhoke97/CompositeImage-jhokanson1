@@ -11,7 +11,7 @@ using namespace std;
 //Save the new pixel matrix 
 
 //Receives a bitmap image and returns a pixel matrix 
-vector <vector <Pixel> >loadImage(Bitmap);
+//vector <vector <Pixel> >loadImage(Bitmap);
 
 //Checks if image is a valid bitmap and if it's the same size as the original bitmap. If the bitmap image being loaded is the original image, skip the size check.
 bool checkImage(vector<vector <Pixel> >&, vector<vector <Pixel> >&);
@@ -63,25 +63,42 @@ int main()
     }     
   }
 
-  canvas = resizeMatrix(canvas, originalMatrix);
+  resizeMatrix(canvas, originalMatrix); 
   for(int i = 0; i < fileList.size(); i++)
   {
-    cout << "Processing file " << fileList[i] << ". File # " << i + 1 << " of " << fileList.size() << endl;
     img.open(fileList[i]);
-    vector< vector <Pixel> > valuesToGet = img.toPixelMatrix();
+    vector< vector <Pixel> > matrixToGet = img.toPixelMatrix(); 
     for(int j = 0; j < canvas.size(); j++)
     {
       for(int k = 0; k < canvas[j].size(); k++)
       {
-        insertPixel(canvas, valuesToGet, j, k); 
-        averagePixel(canvas, fileList.size(), j, k);
+        insertPixel(canvas, matrixToGet, j, k);  
+      }
+    } 
+    cout<<"...and done.\n";
+  }
+
+    for(int j = 0; j < canvas.size(); j++)
+    {
+      for(int k = 0; k < canvas[j].size(); k++)
+      {
+        averagePixel(canvas, fileList.size(), j, k); 
       }
     }
-  } 
 
+  cout<<"Canvas is "<<canvas.size()<<"x"<<canvas[0].size()<<endl; 
   img.fromPixelMatrix(canvas);
-  img.isImage(); 
-  img.save("composite.bmp");
+  if(  img.isImage() )
+  {
+    cout<<"Saved.\n";
+    img.save("composite.bmp");
+  }
+  else
+  {
+    cout<<"TROUBLE!\n";
+  }
+
+  return 0;  
 }
 
 bool checkImage(vector<vector <Pixel> >& pixelMatrix, vector<vector <Pixel> >& originalMatrix)
@@ -121,6 +138,7 @@ void averagePixel(vector< vector<Pixel> >& canvasMatrix, int listSize, int& rows
   rgb.blue = rgb.blue / listSize; 
   canvasMatrix[rows][columns] = rgb; 
 }
+
 vector<vector <Pixel> > resizeMatrix(vector<vector<Pixel> >& canvas, vector<vector <Pixel> >& original)
 {
   for(int i = 0; i < original.size(); i++)
