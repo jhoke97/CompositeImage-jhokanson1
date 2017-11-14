@@ -12,17 +12,21 @@ using namespace std;
 
 //Receives a bitmap image and returns a pixel matrix 
 vector <vector <Pixel> >loadImage(Bitmap);
+
 //Checks if image is a valid bitmap and if it's the same size as the original bitmap. If the bitmap image being loaded is the original image, skip the size check.
 bool checkImage(vector<vector <Pixel> >&, vector<vector <Pixel> >&);
-//Receives a pixel matrix then tallies the total value of red green and blue
-void pixelValue(vector<vector <Pixel> > &,int, int, int &, int &, int &);
+
+void averagePixel(vector<vector <Pixel> > &, int, int&, int&);
+
 //Receive red green and blue averages and places them into a pixel matrix through reference 
-void insertPixel(vector<vector <Pixel> > &, int, int, int, int, int, int);
-void resizeCanvas(vector<vector<Pixel> > &, vector<vector<Pixel> > &);
+void insertPixel(vector<vector <Pixel> >&, vector<vector <Pixel> >&, int&, int&);
+
+vector< vector<Pixel> > resizeMatrix(vector<vector <Pixel> > &, vector<vector <Pixel> > &);
+
 const int FIRST_FILE = 0;
+
 int main()
 {
-  int fileAmount = 0;
   vector<string> fileList;
   Bitmap img;
   Pixel rgb;
@@ -30,33 +34,28 @@ int main()
   bool enterInput = true;
   vector< vector<Pixel> > originalMatrix;
   vector< vector<Pixel> > matrixToCheck;
+  vector <vector <Pixel> > canvas; 
   cout << "Enter up to 10 valid BMP files. Enter DONE when done.\n";
   while(enterInput)
   {
     cin >> fileName;
-    cout << fileName << endl; 
-    if(fileName == "DONE")
+    if(fileName == "DONE" || fileList.size() >= 10)
     {
       enterInput = false;
     }else{
       img.open(fileName);
       if(img.isImage())
       {
-        if(fileAmount == FIRST_FILE)
+        if(fileList.size() == FIRST_FILE)
         {
           originalMatrix = img.toPixelMatrix();
           fileList.push_back(fileName);  
-          fileAmount++;
-          // cout << "original matrix set\n"; 
         }else
         {
           matrixToCheck = img.toPixelMatrix();   
-         // cout << "matrix #" << fileAmount << endl; 
           if(checkImage(matrixToCheck, originalMatrix))
           {
             fileList.push_back(fileName);
-            //  cout << "File succesfully added\n";
-            fileAmount ++; 
           }
 
         } 
@@ -64,24 +63,24 @@ int main()
     }     
   }
 
- vector<vector <Pixel> > canvas;
- resizeCanvas(canvas, originalMatrix);
- for(int i = 0; i < originalMatrix.size(); i++)
+  canvas = resizeMatrix(canvas, originalMatrix);
+  for(int i = 0; i < fileList.size(); i++)
   {
-    for(int j = 0; j < originalMatrix[i].size(); j++)
+    cout << "Processing file " << fileList[i] << ". File # " << i + 1 << " of " << fileList.size() << endl;
+    img.open(fileList[i]);
+    vector< vector <Pixel> > valuesToGet = img.toPixelMatrix();
+    for(int j = 0; j < canvas.size(); j++)
     {
-      for(int k = 0; k < fileList[i].size(); k++)
+      for(int k = 0; k < canvas[j].size(); k++)
       {
-        int red = 0, green = 0, blue = 0;
-        img.open(fileList[k]);
-        vector< vector <Pixel> > valuesToGet = img.toPixelMatrix();
-        pixelValue(valuesToGet, i, j, red, green, blue);
-        cout << red << endl << green << endl << blue << endl; 
-        insertPixel(canvas, i, j, red, green, blue, fileList.size()); 
+        insertPixel(canvas, valuesToGet, j, k); 
+        averagePixel(canvas, fileList.size(), j, k);
       }
     }
   } 
+
   img.fromPixelMatrix(canvas);
+  img.isImage(); 
   img.save("composite.bmp");
 }
 
@@ -91,52 +90,47 @@ bool checkImage(vector<vector <Pixel> >& pixelMatrix, vector<vector <Pixel> >& o
   {
     for(int i = 0; i < pixelMatrix.size(); i++) 
     {
-      for(int j = 0; j < pixelMatrix[i].size(); j++)
-      {
-        if(pixelMatrix[i].size() != originalMatrix[i].size())
-        {
-          cout << "Colums don't match\n";
-          return false;
-        }
-      }
-    }
+
+      if(pixelMatrix[i].size() != originalMatrix[i].size())
+
+        return false;
+    }    
   }else{
-    cout << "rows no match\n";
     return false;
   }
-  cout << "matrices match\n";
   return true;
 }
 
-void pixelValue(vector<vector <Pixel> >& pixelMatrix, int rows, int columns, int& redValue, int& greenValue, int& blueValue)
+void insertPixel(vector<vector <Pixel> >& canvasMatrix, vector<vector <Pixel> >& valuesToGet, int& rows, int& columns)
 {
- Pixel values;
- values = pixelMatrix[rows][columns];
- redValue = redValue + values.red;
- greenValue = greenValue + values.green;
- blueValue = blueValue + values.blue;
+  Pixel canvasRgb;
+  Pixel getRgb;
+  canvasRgb = canvasMatrix[rows][columns];
+  getRgb = valuesToGet[rows][columns];
+  canvasRgb.red = canvasRgb.red + getRgb.red;
+  canvasRgb.green = canvasRgb.green + getRgb.green;
+  canvasRgb.blue = canvasRgb.blue + getRgb.blue;
+  canvasMatrix[rows][columns] = canvasRgb; 
 }
-
-void insertPixel(vector<vector <Pixel> >& canvasMatrix,int rows, int columns, int redAverage, int greenAverage, int blueAverage, int listSize)
+void averagePixel(vector< vector<Pixel> >& canvasMatrix, int listSize, int& rows, int& columns)
 {
-  redAverage = redAverage / listSize;
-  greenAverage = greenAverage / listSize;
-  blueAverage = blueAverage / listSize;
-  cout << "avg pixel calculated\n"; 
   Pixel rgb;
-  rgb.red = redAverage;
-  rgb.green = greenAverage;
-  rgb.blue = blueAverage;
-  cout << "pixel color set\n";
-  canvasMatrix[rows][columns] = rgb;
-  cout << "canvas pixels set\n"; 
+  rgb = canvasMatrix[rows][columns]; 
+  rgb.red = rgb.red / listSize;
+  rgb.green = rgb.green / listSize;
+  rgb.blue = rgb.blue / listSize; 
+  canvasMatrix[rows][columns] = rgb; 
 }
-void resizeCanvas(vector<vector <Pixel> >& canvas, vector<vector <Pixel> > original)
+vector<vector <Pixel> > resizeMatrix(vector<vector<Pixel> >& canvas, vector<vector <Pixel> >& original)
 {
   for(int i = 0; i < original.size(); i++)
   {
+
+    canvas.resize(original.size()); 
     for(int j = 0; j < original[i].size(); i++)
     {
+      canvas[i].resize(original[i].size()); 
     }
   }
+  return canvas;
 }
