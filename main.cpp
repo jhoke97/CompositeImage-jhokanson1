@@ -3,25 +3,11 @@
 #include <string>
 #include "bitmap.h"
 using namespace std;
-//Prompt user to enter bitmap files
-//Load each bitmap into a pixel matrix
-//Check that each bitmap image loaded is a valid format and the same size
-//Get the average value of red, green and blue of each pixel from each matrix
-//Push the average pixel color into a new pixel matrix
-//Save the new pixel matrix 
 
-//Receives a bitmap image and returns a pixel matrix 
-//vector <vector <Pixel> >loadImage(Bitmap);
-
-//Checks if image is a valid bitmap and if it's the same size as the original bitmap. If the bitmap image being loaded is the original image, skip the size check.
 bool checkImage(vector<vector <Pixel> >&, vector<vector <Pixel> >&);
-
-void averagePixel(vector<vector <Pixel> > &, int, int&, int&);
-
-//Receive red green and blue averages and places them into a pixel matrix through reference 
+void averagePixel(vector<vector <Pixel> >&, int, int&, int&);
 void insertPixel(vector<vector <Pixel> >&, vector<vector <Pixel> >&, int&, int&);
-
-vector< vector<Pixel> > resizeMatrix(vector<vector <Pixel> > &, vector<vector <Pixel> > &);
+void resizeMatrix(vector<vector <Pixel> > &, vector<vector <Pixel> > &);
 
 const int FIRST_FILE = 0;
 
@@ -64,6 +50,8 @@ int main()
   }
 
   resizeMatrix(canvas, originalMatrix); 
+  if(fileList.size() > 1 )
+  {
   for(int i = 0; i < fileList.size(); i++)
   {
     img.open(fileList[i]);
@@ -75,29 +63,21 @@ int main()
         insertPixel(canvas, matrixToGet, j, k);  
       }
     } 
-    cout<<"...and done.\n";
+    cout<< "Image " << i + 1 << " of " << fileList.size() << " processed\n";
   }
 
-    for(int j = 0; j < canvas.size(); j++)
+  for(int j = 0; j < canvas.size(); j++)
+  {
+    for(int k = 0; k < canvas[j].size(); k++)
     {
-      for(int k = 0; k < canvas[j].size(); k++)
-      {
-        averagePixel(canvas, fileList.size(), j, k); 
-      }
+      averagePixel(canvas, fileList.size(), j, k); 
     }
-
-  cout<<"Canvas is "<<canvas.size()<<"x"<<canvas[0].size()<<endl; 
+  }
   img.fromPixelMatrix(canvas);
-  if(  img.isImage() )
-  {
-    cout<<"Saved.\n";
-    img.save("composite.bmp");
-  }
-  else
-  {
-    cout<<"TROUBLE!\n";
-  }
-
+  img.save("composite-jhokanson1");
+  }else{
+    cout << "Composite Image could not be created\n";
+       }
   return 0;  
 }
 
@@ -109,10 +89,11 @@ bool checkImage(vector<vector <Pixel> >& pixelMatrix, vector<vector <Pixel> >& o
     {
 
       if(pixelMatrix[i].size() != originalMatrix[i].size())
-
+        cout << "The BMP file is not the same size as the original image\n";
         return false;
     }    
   }else{
+    cout << "The BMP file is not the same size as the original image.\n";
     return false;
   }
   return true;
@@ -139,16 +120,18 @@ void averagePixel(vector< vector<Pixel> >& canvasMatrix, int listSize, int& rows
   canvasMatrix[rows][columns] = rgb; 
 }
 
-vector<vector <Pixel> > resizeMatrix(vector<vector<Pixel> >& canvas, vector<vector <Pixel> >& original)
+void resizeMatrix(vector<vector<Pixel> >& canvas, vector<vector <Pixel> >& original)
 {
   for(int i = 0; i < original.size(); i++)
   {
 
     canvas.resize(original.size()); 
-    for(int j = 0; j < original[i].size(); i++)
+    for(int j = 0; j < original[i].size(); j++)
     {
       canvas[i].resize(original[i].size()); 
     }
   }
-  return canvas;
+
+
 }
+
